@@ -388,18 +388,19 @@ def log_and_check_build_results(build_res, image_name):
             for chunk in build_res:
                 if not chunk:
                     continue
-                line = json.loads(chunk)
-                if 'stream' in line:
-                    logmsg = line['stream'].strip()
-                    get_logger().info(logmsg)
-                elif 'error' in line:
-                    success = False
-                    logmsg = line['error'].strip()
-                    get_logger().error(logmsg)
-                elif 'errorDetail' in line:
-                    success = False
-                    logmsg = line['errorDetail']['message'].strip()
-                    get_logger().error(logmsg)
+                for chunkline in chunk.splitlines():
+		    line = json.loads(chunkline)
+		    if 'stream' in line:
+			logmsg = line['stream'].strip()
+			get_logger().info(logmsg)
+		    elif 'error' in line:
+			success = False
+			logmsg = line['error'].strip()
+			get_logger().error(logmsg)
+		    elif 'errorDetail' in line:
+			success = False
+			logmsg = line['errorDetail']['message'].strip()
+			get_logger().error(logmsg)
         finally:
             get_logger().info('-' * 80)
 

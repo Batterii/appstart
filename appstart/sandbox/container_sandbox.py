@@ -268,6 +268,7 @@ class ContainerSandbox(object):
                 DEFAULT_APPLICATION_PORT: self.port,
                 self.internal_admin_port: self.admin_port,
                 self.internal_proxy_port: self.proxy_port,
+                self.internal_api_port: self.internal_api_port
             }
             if self.extra_ports:
                 port_bindings.update(self.extra_ports)
@@ -476,10 +477,13 @@ class ContainerSandbox(object):
         get_logger().info('Your application is live. '
                           'Access it at: {0}:{1}'.format(host, port))
         if self.run_devappserver:
-            get_logger().info('(port {0} goes through the dev_appserver '
-                              'proxy, for direct access use {1})'.format(
+            get_logger().info(' -port {0} goes through the dev_appserver '
+                              'proxy, for direct access use {1}'.format(
                                   self.proxy_port,
                                   self.port))
+            get_logger().info(
+                ' -API port: {0} (remote_api_stub.ConfigureRemoteApiForOAuth("0.0.0.0:{0}", "/_ah/remote_api", secure=False)'.format(
+                    self.internal_api_port))
 
     @staticmethod
     def app_directory_from_config(full_config_file_path):
@@ -521,6 +525,13 @@ class ContainerSandbox(object):
         files_to_add = {self.conf_path: None}
         if self.application_configuration.is_java:
             files_to_add[self.get_web_xml(self.conf_path)] = None
+        else:
+            appbase = os.path.dirname(self.conf_path)
+            files_to_add[os.path.join(appbase, 'queue.yaml')] = None
+            files_to_add[os.path.join(appbase, 'index.yaml')] = None
+            files_to_add[os.path.join(appbase, 'queue.yaml')] = None
+            files_to_add[os.path.join(appbase, 'cron.yaml')] = None
+            files_to_add[os.path.join(appbase, 'dispatch.yaml')] = None
         utils.add_files_from_static_dirs(files_to_add, self.conf_path)
 
         # The Dockerfile should add the config files to
